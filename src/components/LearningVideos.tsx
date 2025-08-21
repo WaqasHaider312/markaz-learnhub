@@ -107,7 +107,7 @@ const LearningVideos = () => {
           <div className="video-card" data-category="advanced" onClick={() => playVideo('lesson-6')}>
             <div className="video-thumbnail">
               <div className="play-button">
-                <div class="play-arrow"></div>
+                <div className="play-arrow"></div>
               </div>
             </div>
             <div className="video-info">
