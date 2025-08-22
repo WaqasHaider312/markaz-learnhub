@@ -1,84 +1,85 @@
-import React from 'react';
+// Updated LearningResources.tsx - Keep 3 main categories, expand on click
+
+import React, { useState } from 'react';
 import { useMarkazAPI } from '../hooks/useMarkazAPI';
 
 const LearningResources = () => {
   const { data, loading, error, updateResourceDownloads } = useMarkazAPI();
-  const learningResources = data?.learning_resources || [];
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
-  const handleResourceClick = async (resource: any) => {
-    console.log('Resource clicked:', resource.Title);
+  // Main 3 categories (always shown)
+  const mainCategories = [
+    {
+      id: 'weekly-tips',
+      title: 'Weekly Tips',
+      icon: '📝',
+      description: 'Get weekly programming and study tips',
+      category: 'Weekly Content'
+    },
+    {
+      id: 'free-courses',
+      title: 'Free Courses', 
+      icon: '🎓',
+      description: 'Complete collection of free courses',
+      category: 'Free Courses'
+    },
+    {
+      id: 'blog-articles',
+      title: 'Blog Articles',
+      icon: '📖', 
+      description: 'Latest articles on technology and learning',
+      category: 'Blog Articles'
+    }
+  ];
+
+  // Get subcategories for a main category
+  const getSubResources = (mainCategory) => {
+    if (!data?.learning_resources) return [];
     
-    // Update download count in Google Sheets
+    return data.learning_resources.filter(resource => 
+      resource.Category === mainCategory.category
+    );
+  };
+
+  // Get count for each main category
+  const getCategoryCount = (mainCategory) => {
+    const subResources = getSubResources(mainCategory);
+    const totalDownloads = subResources.reduce((sum, resource) => 
+      sum + (resource.Downloads || 0), 0
+    );
+    
+    if (totalDownloads > 0) {
+      return `${totalDownloads} downloads`;
+    }
+    
+    // Fallback counts
+    const countMap = {
+      'weekly-tips': '25+ tips available',
+      'free-courses': '10+ courses available',
+      'blog-articles': '50+ articles published'
+    };
+    
+    return countMap[mainCategory.id] || `${subResources.length} items`;
+  };
+
+  // Handle main category click
+  const handleCategoryClick = (category) => {
+    setSelectedCategory(category);
+    setShowModal(true);
+  };
+
+  // Handle sub-resource click
+  const handleSubResourceClick = async (resource) => {
     if (resource.ID) {
       await updateResourceDownloads(resource.ID);
     }
     
-    // Open the resource link
     if (resource.Link_URL) {
       window.open(resource.Link_URL, '_blank');
     }
   };
 
-  // Icon mapping based on resource type/category
-  const getResourceIcon = (type: string, category: string) => {
-    const iconMap: { [key: string]: string } = {
-      // By category
-      'Weekly Content': '📝',
-      'Free Courses': '🎓',
-      'Blog Articles': '📖',
-      'Weekly Tips': '💡',
-      'Tips': '💡',
-      'Courses': '🎓',
-      'Articles': '📰',
-      'Books': '📚',
-      'Guides': '📋',
-      'Templates': '📄',
-      'Tools': '🔧',
-      'Resources': '📦',
-      // By type
-      'tips': '💡',
-      'course': '🎓',
-      'article': '📖',
-      'book': '📚',
-      'guide': '📋',
-      'template': '📄',
-      'tool': '🔧',
-      'pdf': '📄',
-      'video': '📹',
-      'audio': '🎧',
-      'download': '⬇️'
-    };
-    
-    return iconMap[category] || iconMap[type] || iconMap[type?.toLowerCase()] || '📄';
-  };
-
-  // Get count text based on resource type
-  const getCountText = (resource: any) => {
-    const downloads = resource.Downloads || 0;
-    const type = resource.Resource_Type?.toLowerCase() || '';
-    const category = resource.Category || '';
-    
-    if (downloads > 0) {
-      return `${downloads} downloads`;
-    }
-    
-    // Default count text based on category
-    const countMap: { [key: string]: string } = {
-      'Weekly Tips': '25+ tips available',
-      'Free Courses': '10+ courses available', 
-      'Blog Articles': '50+ articles published',
-      'Tips': 'New tips weekly',
-      'Courses': 'Free access',
-      'Articles': 'Latest articles',
-      'Books': 'Free download',
-      'Guides': 'Step-by-step',
-      'Templates': 'Ready to use'
-    };
-    
-    return countMap[category] || countMap[resource.Resource_Type] || 'Available now';
-  };
-
-  // Loading state
   if (loading) {
     return (
       <section className="section resources-section" style={{background: 'white'}}>
@@ -87,52 +88,9 @@ const LearningResources = () => {
             Learning Resources
             <span style={{content: '""', position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', width: '80px', height: '4px', background: 'linear-gradient(to right, #10b981, #3b82f6)', borderRadius: '2px', display: 'block'}}></span>
           </h2>
-          <div className="resources-grid" style={{display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '600px', margin: '0 auto'}}>
-            <div style={{textAlign: 'center', padding: '40px', color: '#666'}}>
-              <div style={{fontSize: '24px', marginBottom: '10px'}}>⏳</div>
-              <p>Loading learning resources...</p>
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <section className="section resources-section" style={{background: 'white'}}>
-        <div className="container" style={{maxWidth: '1200px', margin: '0 auto'}}>
-          <h2 className="section-title" style={{textAlign: 'center', fontSize: '32px', fontWeight: 'bold', marginBottom: '40px', position: 'relative'}}>
-            Learning Resources
-            <span style={{content: '""', position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', width: '80px', height: '4px', background: 'linear-gradient(to right, #10b981, #3b82f6)', borderRadius: '2px', display: 'block'}}></span>
-          </h2>
-          <div className="resources-grid" style={{display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '600px', margin: '0 auto'}}>
-            <div style={{textAlign: 'center', padding: '40px', color: '#f56565', backgroundColor: '#fed7d7', borderRadius: '12px'}}>
-              <div style={{fontSize: '24px', marginBottom: '10px'}}>❌</div>
-              <p>Error loading resources: {error}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // No resources state
-  if (learningResources.length === 0) {
-    return (
-      <section className="section resources-section" style={{background: 'white'}}>
-        <div className="container" style={{maxWidth: '1200px', margin: '0 auto'}}>
-          <h2 className="section-title" style={{textAlign: 'center', fontSize: '32px', fontWeight: 'bold', marginBottom: '40px', position: 'relative'}}>
-            Learning Resources
-            <span style={{content: '""', position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', width: '80px', height: '4px', background: 'linear-gradient(to right, #10b981, #3b82f6)', borderRadius: '2px', display: 'block'}}></span>
-          </h2>
-          <div className="resources-grid" style={{display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '600px', margin: '0 auto'}}>
-            <div style={{textAlign: 'center', padding: '40px', color: '#666'}}>
-              <div style={{fontSize: '24px', marginBottom: '10px'}}>📚</div>
-              <p>No learning resources available yet.</p>
-              <p style={{fontSize: '14px', marginTop: '10px', color: '#999'}}>Add resources to your Google Sheets to see them here!</p>
-            </div>
+          <div style={{textAlign: 'center', padding: '40px', color: '#666'}}>
+            <div style={{fontSize: '24px', marginBottom: '10px'}}>⏳</div>
+            <p>Loading learning resources...</p>
           </div>
         </div>
       </section>
@@ -146,12 +104,14 @@ const LearningResources = () => {
           Learning Resources
           <span style={{content: '""', position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', width: '80px', height: '4px', background: 'linear-gradient(to right, #10b981, #3b82f6)', borderRadius: '2px', display: 'block'}}></span>
         </h2>
+        
+        {/* Always show these 3 main categories */}
         <div className="resources-grid" style={{display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '600px', margin: '0 auto'}}>
-          {learningResources.map((resource) => (
+          {mainCategories.map((category) => (
             <div 
-              key={resource.ID}
+              key={category.id}
               className="resource-card" 
-              onClick={() => handleResourceClick(resource)} 
+              onClick={() => handleCategoryClick(category)}
               style={{
                 display: 'flex', 
                 height: '100px', 
@@ -182,7 +142,7 @@ const LearningResources = () => {
                 fontSize: '40px', 
                 flexShrink: 0
               }}>
-                {getResourceIcon(resource.Resource_Type, resource.Category)}
+                {category.icon}
               </div>
               <div className="resource-content" style={{
                 flex: 1, 
@@ -197,88 +157,121 @@ const LearningResources = () => {
                   marginBottom: '8px', 
                   color: '#1a1a1a'
                 }}>
-                  {resource.Title}
+                  {category.title}
                 </h3>
-                
-                {/* Show description if available */}
-                {resource.Description && (
-                  <p style={{
-                    fontSize: '14px',
-                    color: '#666',
-                    marginBottom: '8px',
-                    lineHeight: '1.4',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden'
-                  }}>
-                    {resource.Description}
-                  </p>
-                )}
-                
-                <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
-                  <span className="resource-count" style={{
-                    display: 'inline-block', 
-                    background: 'linear-gradient(to right, #10b981, #3b82f6)', 
-                    color: 'white', 
-                    padding: '2px 8px', 
-                    borderRadius: '3px', 
-                    fontSize: '10px', 
-                    fontWeight: '600', 
-                    width: 'fit-content', 
-                    whiteSpace: 'nowrap'
-                  }}>
-                    {getCountText(resource)}
-                  </span>
-                  
-                  {/* Show file size if available */}
-                  {resource.File_Size && (
-                    <span style={{
-                      fontSize: '10px',
-                      color: '#999',
-                      backgroundColor: '#f5f5f5',
-                      padding: '2px 6px',
-                      borderRadius: '3px'
-                    }}>
-                      {resource.File_Size}
-                    </span>
-                  )}
-                </div>
+                <span className="resource-count" style={{
+                  display: 'inline-block', 
+                  background: 'linear-gradient(to right, #10b981, #3b82f6)', 
+                  color: 'white', 
+                  padding: '2px 8px', 
+                  borderRadius: '3px', 
+                  fontSize: '10px', 
+                  fontWeight: '600', 
+                  width: 'fit-content', 
+                  whiteSpace: 'nowrap'
+                }}>
+                  {getCategoryCount(category)}
+                </span>
               </div>
               
-              {/* Category badge in top right */}
-              {resource.Category && (
-                <div style={{
-                  position: 'absolute',
-                  top: '8px',
-                  right: '8px',
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  color: '#333',
-                  padding: '2px 6px',
-                  borderRadius: '4px',
-                  fontSize: '9px',
-                  fontWeight: '600',
-                  textTransform: 'uppercase'
-                }}>
-                  {resource.Category}
-                </div>
-              )}
+              {/* Arrow indicator */}
+              <div style={{
+                position: 'absolute',
+                right: '20px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#999',
+                fontSize: '20px'
+              }}>
+                →
+              </div>
             </div>
           ))}
         </div>
-        
-        {/* Summary stats */}
-        <div style={{
-          textAlign: 'center',
-          marginTop: '30px',
-          fontSize: '14px',
-          color: '#666'
-        }}>
-          <p>
-            📊 {learningResources.length} resources available • 
-            Total downloads: {learningResources.reduce((sum, resource) => sum + (resource.Downloads || 0), 0)}
-          </p>
-        </div>
+
+        {/* Modal/Popup for subcategories */}
+        {showModal && selectedCategory && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              background: 'white',
+              borderRadius: '15px',
+              padding: '30px',
+              maxWidth: '600px',
+              maxHeight: '80vh',
+              overflow: 'auto',
+              position: 'relative'
+            }}>
+              {/* Close button */}
+              <button
+                onClick={() => setShowModal(false)}
+                style={{
+                  position: 'absolute',
+                  top: '15px',
+                  right: '15px',
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#999'
+                }}
+              >
+                ×
+              </button>
+
+              <h3 style={{marginBottom: '20px', color: '#1a1a1a'}}>
+                {selectedCategory.title}
+              </h3>
+
+              {/* Sub-resources */}
+              <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                {getSubResources(selectedCategory).map((resource) => (
+                  <div
+                    key={resource.ID}
+                    onClick={() => handleSubResourceClick(resource)}
+                    style={{
+                      padding: '15px',
+                      border: '1px solid #eee',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#f9f9f9';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'white';
+                    }}
+                  >
+                    <h4 style={{margin: '0 0 5px 0', color: '#333'}}>{resource.Title}</h4>
+                    <p style={{margin: '0', color: '#666', fontSize: '14px'}}>{resource.Description}</p>
+                    {resource.Downloads && (
+                      <span style={{fontSize: '12px', color: '#999'}}>
+                        {resource.Downloads} downloads
+                      </span>
+                    )}
+                  </div>
+                ))}
+                
+                {getSubResources(selectedCategory).length === 0 && (
+                  <p style={{textAlign: 'center', color: '#999', padding: '20px'}}>
+                    No resources available in this category yet.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

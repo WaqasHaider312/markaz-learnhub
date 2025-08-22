@@ -20,13 +20,11 @@ const HeroSection = () => {
   const { data, loading } = useMarkazAPI();
   const { getSetting } = useSiteSettings();
 
-  // Combine all searchable content from Google Sheets
   const searchableContent = useMemo(() => {
     if (!data) return [];
 
     const content: SearchResult[] = [];
 
-    // Add featured content
     data.featured_content?.forEach(item => {
       content.push({
         id: item.ID,
@@ -38,7 +36,6 @@ const HeroSection = () => {
       });
     });
 
-    // Add learning videos
     data.learning_videos?.forEach(video => {
       content.push({
         id: video.ID,
@@ -53,7 +50,6 @@ const HeroSection = () => {
       });
     });
 
-    // Add learning resources
     data.learning_resources?.forEach(resource => {
       content.push({
         id: resource.ID,
@@ -69,87 +65,52 @@ const HeroSection = () => {
     return content;
   }, [data]);
 
-  // Global search function
   const handleSearch = (query: string): SearchResult[] => {
-    if (!query.trim()) {
-      return [];
-    }
+    if (!query.trim()) return [];
     
     const searchTerm = query.toLowerCase();
     
-    const filteredResults = searchableContent.filter(item =>
-      item.title.toLowerCase().includes(searchTerm) ||
-      item.description.toLowerCase().includes(searchTerm) ||
-      item.category.toLowerCase().includes(searchTerm) ||
-      item.type.toLowerCase().includes(searchTerm) ||
-      (item.difficulty && item.difficulty.toLowerCase().includes(searchTerm))
-    );
-    
-    // Sort results by relevance (title matches first, then description, then category)
-    return filteredResults.sort((a, b) => {
-      const aTitle = a.title.toLowerCase().includes(searchTerm);
-      const bTitle = b.title.toLowerCase().includes(searchTerm);
-      
-      if (aTitle && !bTitle) return -1;
-      if (!aTitle && bTitle) return 1;
-      
-      return 0;
-    });
+    return searchableContent
+      .filter(item =>
+        item.title.toLowerCase().includes(searchTerm) ||
+        item.description.toLowerCase().includes(searchTerm) ||
+        item.category.toLowerCase().includes(searchTerm) ||
+        item.type.toLowerCase().includes(searchTerm) ||
+        (item.difficulty && item.difficulty.toLowerCase().includes(searchTerm))
+      )
+      .sort((a, b) => {
+        const aTitle = a.title.toLowerCase().includes(searchTerm);
+        const bTitle = b.title.toLowerCase().includes(searchTerm);
+        if (aTitle && !bTitle) return -1;
+        if (!aTitle && bTitle) return 1;
+        return 0;
+      });
   };
 
-  // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    
-    // Perform search as user types
-    const results = handleSearch(query);
-    console.log('Search results:', results);
-    
-    // You can trigger a callback here to update parent component or global state
-    // onSearchResults(results);
+    setSearchQuery(e.target.value);
   };
 
-  // Handle search submit
   const handleSearchSubmit = () => {
     const results = handleSearch(searchQuery);
-    console.log('Final search results:', results);
-    
-    // Here you can navigate to search results page or update global state
-    // For example: navigate('/search', { state: { results, query: searchQuery } });
+    console.log('Search results:', results);
   };
 
-  // Handle Enter key press
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearchSubmit();
     }
   };
 
-  // Handle result selection
   const handleResultClick = (result: SearchResult) => {
-    console.log('Selected:', result);
-    
-    // Update view/download counts
-    if (result.type === 'video' && data) {
-      // You can call updateVideoViews here if needed
-    } else if (result.type === 'resource' && data) {
-      // You can call updateResourceDownloads here if needed
-    }
-    
-    // Open the URL
     if (result.url) {
       window.open(result.url, '_blank');
     }
-    
-    // Clear search
     setSearchQuery('');
   };
 
-  // Get search results
   const searchResults = searchQuery ? handleSearch(searchQuery) : [];
 
-  // Get icon for content type
   const getTypeIcon = (type: string) => {
     const iconMap: { [key: string]: string } = {
       'featured': '⭐',
@@ -159,18 +120,22 @@ const HeroSection = () => {
     return iconMap[type] || '📄';
   };
 
-  // Get dynamic site content from Google Sheets
   const siteTitle = getSetting('site_title', 'Markaz Academy');
   const siteSubtitle = getSetting('hero_subtitle', 'Baycho Asani Se');
 
   return (
     <div className="w-full">
-      <section className="hero bg-gradient-to-b from-blue-50 to-white py-20 px-4">
+      <section 
+        className="hero py-20 px-4" 
+        style={{
+          background: 'linear-gradient(90deg, #1fd65f 0%, #0ea5e9 100%)'
+        }}
+      >
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl font-bold text-gray-800 mb-4">
+          <h1 className="text-5xl font-bold text-white mb-4">
             {loading ? 'Loading...' : siteTitle}
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-xl text-white mb-8 opacity-90">
             {loading ? 'Loading...' : siteSubtitle}
           </p>
           
@@ -178,7 +143,7 @@ const HeroSection = () => {
             <div className="search-container relative">
               <input
                 type="text"
-                className="hero-search w-full px-6 py-4 pr-12 text-lg border-2 border-gray-300 rounded-full focus:outline-none focus:border-blue-500 shadow-lg"
+                className="hero-search w-full px-6 py-4 pr-12 text-lg border-2 border-white/20 rounded-full focus:outline-none focus:border-white/50 shadow-lg bg-white/10 backdrop-blur-sm text-white placeholder-white/70"
                 placeholder={loading ? "Loading content..." : `Search across ${searchableContent.length} items...`}
                 value={searchQuery}
                 onChange={handleInputChange}
@@ -188,13 +153,12 @@ const HeroSection = () => {
               <button 
                 onClick={handleSearchSubmit}
                 disabled={loading}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-500 hover:text-blue-500 transition-colors cursor-pointer disabled:opacity-50"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-white/70 hover:text-white transition-colors cursor-pointer disabled:opacity-50"
               >
                 <Search size={24} />
               </button>
             </div>
           
-            {/* Search Results Dropdown */}
             {searchQuery && !loading && (
               <div className="search-results absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-96 overflow-y-auto">
                 {searchResults.length > 0 ? (
@@ -231,7 +195,6 @@ const HeroSection = () => {
                               </div>
                             </div>
                             
-                            {/* Additional metadata */}
                             <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
                               {result.difficulty && (
                                 <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded">
@@ -271,7 +234,6 @@ const HeroSection = () => {
               </div>
             )}
 
-            {/* Loading state for search */}
             {loading && (
               <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
                 <div className="px-4 py-6 text-center text-gray-500">
@@ -282,9 +244,8 @@ const HeroSection = () => {
             )}
           </div>
 
-          {/* Search stats */}
           {!loading && searchableContent.length > 0 && (
-            <div className="mt-4 text-sm text-gray-500">
+            <div className="mt-4 text-sm text-white/70">
               Search across {searchableContent.length} items: {' '}
               {data?.featured_content?.length || 0} featured, {' '}
               {data?.learning_videos?.length || 0} videos, {' '}
