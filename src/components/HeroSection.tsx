@@ -143,7 +143,7 @@ const HeroSection = () => {
             <div className="search-container relative">
               <input
                 type="text"
-                className="hero-search w-full px-6 py-4 pr-12 text-lg border-2 border-white/20 rounded-full focus:outline-none focus:border-white/50 shadow-lg bg-white/10 backdrop-blur-sm text-white placeholder-white/70"
+                className="hero-search w-full px-6 py-4 pr-12 text-lg border-none rounded-full focus:outline-none shadow-lg bg-white/90 text-gray-700 placeholder-gray-500"
                 placeholder={loading ? "Loading content..." : `Search across ${searchableContent.length} items...`}
                 value={searchQuery}
                 onChange={handleInputChange}
@@ -153,9 +153,9 @@ const HeroSection = () => {
               <button 
                 onClick={handleSearchSubmit}
                 disabled={loading}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-white/70 hover:text-white transition-colors cursor-pointer disabled:opacity-50"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer disabled:opacity-50"
               >
-                <Search size={24} />
+                <Search size={20} />
               </button>
             </div>
           
@@ -245,11 +245,8 @@ const HeroSection = () => {
           </div>
 
           {!loading && searchableContent.length > 0 && (
-            <div className="mt-4 text-sm text-white/70">
-              Search across {searchableContent.length} items: {' '}
-              {data?.featured_content?.length || 0} featured, {' '}
-              {data?.learning_videos?.length || 0} videos, {' '}
-              {data?.learning_resources?.length || 0} resources
+            <div className="mt-6 text-sm text-white/70">
+              {/* Search stats removed as requested */}
             </div>
           )}
         </div>
