@@ -139,7 +139,7 @@ const HeroSection = () => {
             {loading ? 'Loading...' : siteSubtitle}
           </p>
           
-          <div className="relative max-w-2xl mx-auto pl-5">
+          <div className="relative max-w-2xl mx-auto pl-10">
             <div className="search-container relative">
               <input
                 type="text"
